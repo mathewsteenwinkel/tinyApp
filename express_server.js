@@ -72,6 +72,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
 });
 
-
-
-
+app.get("/u/:id", (req, res) => {
+    shortURL.location.href = longURL
+  res.redirect(longURL);
+});
