@@ -8,9 +8,28 @@ app.set("view engine", "ejs")
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+
 };
 
 
+
+//urlDatabase[generateRandomString] = req.body
+
+//asign short url that call the function of the generator
+//assign long url - body.
+//push both into urldatabase
+// redirect the user to the myURLS webpage so that they can see their new short url.
+
+
+
+function generateRandomString(len) {
+  let text = ""
+  let charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < len; i++)
+    text += charset.charAt(Math.floor(Math.random() * charset.length));
+
+  return text;
+}
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
@@ -45,17 +64,14 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString(6)
+  const longURL = req.body.longURL;
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  urlDatabase[shortURL]= longURL;
+  //console.log(longURL)
+  res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
 });
 
-function generateRandomString(len) {
-  let text = ""
-  let charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-  for (var i = 0; i < len; i++)
-    text += charset.charAt(Math.floor(Math.random() * charset.length));
 
-  return text;
-}
 
-console.log(stringGen(6));
+
