@@ -49,6 +49,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/url/register", (req, res) => {
+  req.render("/url/register")
+});
+
+app.post("/url/register", (req, res) => {
+  res.redirect("/urls")
+});
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -82,12 +90,17 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL]= longURL;
   //console.log(longURL)
   res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
-
 });
 
 app.post("/urls/login", (req, res) => {
 
   res.cookie ('username',req.body.username)
+  res.redirect("/urls");
+});
+
+app.post("/logout", (req, res) => {
+  console.log()
+  res.clearCookie ('username', req.body.username)
   res.redirect("/urls");
 });
 
@@ -112,6 +125,8 @@ app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[shortUrl]
   res.redirect("/urls");
 });
+
+
 
 
 
