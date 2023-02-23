@@ -35,7 +35,18 @@
       />
   
   <button type="submit" class="btn btn-primary">Login</button>
-  <% } %>
+
+  <br>
   </form>
+  <div class="d-inline-flex" style="position: absolute; right: 10px">
+    <form class="form-inline" action="/regi" method="GET">
+      <button type="submit" class="btn btn-success" style="margin-left: 20px;">Register</button>
+    </form>
+    <form class="form-inline" action="/login" method="GET">
+      <button href="/login" type="submit" class="btn btn-success" style="margin-left: 20px;">Login</button>
+    </form>
+  </div>
+  <% } %>
+  
   </nav>
 </header>
