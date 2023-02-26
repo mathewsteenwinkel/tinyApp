@@ -1,10 +1,14 @@
-
+//++++++++ Dependencies/setup +++++++++++++
 const express = require("express");
-const cookieSession = require('cookie-session')
-const bcrypt = require('bcryptjs')
-const helper = require("./helper")
 const app = express();
 const PORT = 8080; // default port 8080
+const cookieSession = require('cookie-session')
+const bcrypt = require('bcryptjs')
+const {
+  helper,
+  generateRandomString, 
+  urlsForUser,
+} = require("./helper")
 
 app.set("view engine", "ejs")
 
@@ -14,6 +18,7 @@ app.use(cookieSession({
   keys: ['alsdkjfnlsdkjaf', 'sakdjfnlksd']
 }))
 app.use(express.urlencoded({ extended: false }));
+
 
 const urlDatabase = {
   "b2xVn2": {
@@ -40,30 +45,17 @@ const users = {
   },
 };
 
-const urlsForUser = (id) => {
-  const filteredUrls = [];
 
-  for (const shortid in urlDatabase) {
-    if (id == urlDatabase[shortid].userID) {
-      filteredUrls[shortid] = urlDatabase[shortid];
-    }
-  }
-  return filteredUrls;
-}
-
-function generateRandomString(len) {
-  let text = ""
-  let charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < len; i++)
-    text += charset.charAt(Math.floor(Math.random() * charset.length));
-
-  return text;
-}
-
+//
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session.userid){
+    res.redirect("urls");
+  }else{
+    res.redirect("/login");
+  }
 });
 
+//
 app.get("/urls", (req, res) => {
   if (!req.session.userid) {
     return res.status(401).send('Please log in or register to see content.')
@@ -97,11 +89,19 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars)
 });
 
+//registration page
 app.get("/registration", (req, res) => {
   if (req.session.userid) {
     res.redirect('/urls')
   }
-  res.render("urls_register");
+
+  const user = users[req.session.userid];
+    const templateVars = {
+      urls: urlsForUser(req.session.userid),
+      username: user?.email
+    }
+
+  res.render("urls_register", templateVars);
 });
 
 app.post("/registration", (req, res) => {
@@ -119,15 +119,22 @@ app.post("/registration", (req, res) => {
     return res.status(400).send('username already in use.')
   }
   users[id] = { id, email, password }
+  
   req.session.userid = id;
   res.redirect('/urls')
 });
 
+// user login page
 app.get("/login", (req, res) => {
   if (users[req.session.userid]) {
     return res.redirect('/urls')
   }
-  res.render('urls_login')
+  const user = users[req.session.userid];
+    const templateVars = {
+      urls: urlsForUser(req.session.userid),
+      username: user?.email
+    }
+  res.render('urls_login', templateVars)
 });
 
 app.post("/login", (req, res) => {
@@ -148,6 +155,7 @@ app.post("/login", (req, res) => {
   res.redirect('/urls')
 });
 
+//generate short URLs id
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send('url not found')
@@ -189,12 +197,14 @@ app.post("/urls/:id", (req, res) => {
   res.redirect(`/urls/${shortURL}`); 
 });
 
+
 app.get("/u/:id", (req, res) => {
   let shortURL = req.params.id;
   let longUrl = urlDatabase[shortURL]
   res.redirect(longUrl);
 });
 
+//removes id 
 app.post("/urls/:id/delete", (req, res) => {
   let shortUrl = req.params.id
   delete urlDatabase[shortUrl]

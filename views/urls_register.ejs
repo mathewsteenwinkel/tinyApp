@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,19 +8,17 @@
   <title>Logout</title>
 </head>
 <h1> Create Account</h1>
+
 <body>
-  <form action="/registration" method="POST">
-    <label> Email </label>
-    <input 
-    type="email"
-    name="email"
-    >
-    <br/>
-    <label> Password </label>
-    <input 
-    type="password"
-    name="password">
-    <button type="submit"> Register</button>
-  </form>
+  <%- include('partials/_header') %>
+    <form action="/registration" method="POST">
+      <label> Email </label>
+      <input type="email" name="email">
+      <br />
+      <label> Password </label>
+      <input type="password" name="password">
+      <button type="submit"> Register</button>
+    </form>
 </body>
+
 </html>
