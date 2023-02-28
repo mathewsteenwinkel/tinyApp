@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 
-const  helper  = require('../helper');
+const  {getUserByEmail}  = require('../helper');
 
 const testUsers = {
   "userRandomID": {
@@ -17,13 +17,15 @@ const testUsers = {
 
 describe('getUserByEmail', function() {
   it('should return a user with valid email', function() {
-    const user = helper("user@example.com", testUsers)
+    const user = getUserByEmail("user@example.com", testUsers);
+    console.log('user:', user);
     const expectedUserID = "userRandomID";
-    assert.equal = (user, expectedUserID)
+    assert.equal(user.id, expectedUserID);
   });
   it('should return undefined', function() {
-    const user = helper("user@example.com", testUsers)
-    const output = undefined
-    assert.equal = (user, output)
+    const user = getUserByEmail("example@example.com", testUsers);
+    console.log('user:', user);
+    const output = undefined;
+    assert.equal(user, output);
   });
 });

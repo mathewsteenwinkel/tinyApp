@@ -1,7 +1,7 @@
 //+++++++++Functions+++++++++
 
 // function to look up if email is already in use.
-const helper = (email, users) => {
+const getUserByEmail = (email, users) => {
   for (let key in users) {
     const user = users[key];
     if (user.email === email) {
@@ -64,4 +64,4 @@ const users = {
 };
 
 
-module.exports = {helper, generateRandomString, urlsForUser};
+module.exports = { getUserByEmail, generateRandomString, urlsForUser, urlDatabase, users};

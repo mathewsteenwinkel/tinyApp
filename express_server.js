@@ -2,13 +2,15 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieSession = require('cookie-session')
-const bcrypt = require('bcryptjs')
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcryptjs');
 const {
-  helper,
-  generateRandomString, 
+  getUserByEmail,
+  generateRandomString,
   urlsForUser,
-} = require("./helper")
+  users,
+  urlDatabase
+} = require("./helper");
 
 app.set("view engine", "ejs")
 
@@ -20,42 +22,17 @@ app.use(cookieSession({
 app.use(express.urlencoded({ extended: false }));
 
 
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "userRandomID"
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "user2RandomID"
-  },
-};
-
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
 
 //
 app.get("/", (req, res) => {
-  if (req.session.userid){
+  if (req.session.userid) {
     res.redirect("urls");
-  }else{
+  } else {
     res.redirect("/login");
   }
 });
 
-//
+// index page of urls
 app.get("/urls", (req, res) => {
   if (!req.session.userid) {
     return res.status(401).send('Please log in or register to see content.')
@@ -74,7 +51,11 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  if (req.session.userid) {
+    res.redirect("urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -96,32 +77,31 @@ app.get("/registration", (req, res) => {
   }
 
   const user = users[req.session.userid];
-    const templateVars = {
-      urls: urlsForUser(req.session.userid),
-      username: user?.email
-    }
+  const templateVars = {
+    urls: urlsForUser(req.session.userid),
+    username: user?.email
+  }
 
   res.render("urls_register", templateVars);
 });
 
 app.post("/registration", (req, res) => {
-  const id = generateRandomString(4)
+  const id = generateRandomString(4);
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  console.log(hashedPassword)
 
   if (!email || !password) {
     return res.status(400).send('please provide a username and password');
   }
-  const foundUser = helper(email, users);
+  const foundUser = getUserByEmail(email, users);
   if (foundUser) {
-    return res.status(400).send('username already in use.')
+    return res.status(400).send('username already in use.');
   }
-  users[id] = { id, email, password }
-  
+  users[id] = { id, email, hashedPassword };
+
   req.session.userid = id;
-  res.redirect('/urls')
+  res.redirect('/urls');
 });
 
 // user login page
@@ -130,20 +110,19 @@ app.get("/login", (req, res) => {
     return res.redirect('/urls')
   }
   const user = users[req.session.userid];
-    const templateVars = {
-      urls: urlsForUser(req.session.userid),
-      username: user?.email
-    }
+  const templateVars = {
+    urls: urlsForUser(req.session.userid),
+    username: user?.email
+  }
   res.render('urls_login', templateVars)
 });
 
 app.post("/login", (req, res) => {
-  console.log(req.body)
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
   bcrypt.compareSync(password, hashedPassword);
-  const foundUser = helper(email, users);
+  const foundUser = getUserByEmail(email, users);
 
   if (!foundUser) {
     return res.status(403).send('account not found')
@@ -160,7 +139,7 @@ app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send('url not found')
   }
-    const templateVars = {
+  const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
     username: req.session["userid"]
@@ -171,18 +150,17 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6)
   const longURL = req.body.longURL;
-  console.log(req.body); 
 
   const temp = {
     longURL: longURL,
     userID: req.session.userid
   };
   urlDatabase[shortURL] = temp;
- 
+
   if (!req.session.userid) {
     return res.status(401).send('Please log in to use the app.')
   }
-  res.redirect(`/urls/${shortURL}`); 
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/logout", (req, res) => {
@@ -194,7 +172,7 @@ app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
-  res.redirect(`/urls/${shortURL}`); 
+  res.redirect(`/urls/${shortURL}`);
 });
 
 
