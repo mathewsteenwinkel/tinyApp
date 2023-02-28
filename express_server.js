@@ -139,25 +139,33 @@ app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send('url not found')
   }
-  const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
-    username: req.session["userid"]
+  const shortURL = req.params.id;
+  if (req.session.userid === urlDatabase[shortURL].userID) {
+    const templateVars = {
+      id: req.params.id,
+      longURL: urlDatabase[req.params.id].longURL,
+      username: req.session["userid"]
+    }
+    res.render("urls_show", templateVars)
+  } else {
+    res.send("You don't own the url");
   }
-  res.render("urls_show", templateVars)
+
 });
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6)
   const longURL = req.body.longURL;
 
-  const temp = {
-    longURL: longURL,
-    userID: req.session.userid
-  };
-  urlDatabase[shortURL] = temp;
+  //console.log(urlDatabase[shortURL].userID);
+  if (req.session.userid) {
 
-  if (!req.session.userid) {
+    const temp = {
+      longURL: longURL,
+      userID: req.session.userid
+    };
+    urlDatabase[shortURL] = temp;
+  }else {
     return res.status(401).send('Please log in to use the app.')
   }
   res.redirect(`/urls/${shortURL}`);
@@ -171,22 +179,26 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL].longURL = longURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
 
 app.get("/u/:id", (req, res) => {
   let shortURL = req.params.id;
-  let longUrl = urlDatabase[shortURL]
+  let longUrl = urlDatabase[shortURL].longURL;
   res.redirect(longUrl);
 });
 
 //removes id 
 app.post("/urls/:id/delete", (req, res) => {
-  let shortUrl = req.params.id
-  delete urlDatabase[shortUrl]
-  res.redirect("/urls");
+  if (req.session.userid) {
+    let shortUrl = req.params.id
+    delete urlDatabase[shortUrl]
+    res.redirect("/urls");
+  } else {
+    res.send("please log in to edit the url.");
+  }
 });
 
 app.listen(PORT, () => {
